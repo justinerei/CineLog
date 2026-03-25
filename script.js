@@ -124,6 +124,29 @@ $('status').addEventListener('change', function () {
 setRatingLock(true);
 
 
+// ==========================================
+// ADDED: CUSTOM GENRE EVENT LISTENER
+// Lalabas yung textbox kung 'Other' ang pinili
+// ==========================================
+const genreSelect = document.getElementById('genre');
+const customGenreGroup = document.getElementById('customGenreGroup');
+const customGenreInput = document.getElementById('customGenre');
+
+if (genreSelect && customGenreGroup) {
+  genreSelect.addEventListener('change', (e) => {
+    // Ginawang toLowerCase() para kahit 'Other' o 'other', kakagat 'to!
+    if (e.target.value.toLowerCase() === 'other') {
+      customGenreGroup.style.display = 'block'; // Pinipilit ilabas gamit JS
+      customGenreInput.required = true;
+    } else {
+      customGenreGroup.style.display = 'none';  // Pinipilit itago
+      customGenreInput.required = false;
+      customGenreInput.value = ''; 
+    }
+  });
+}
+
+
 function setFieldState(inputId, errId, isError) {
   const input = $(inputId);
   const errEl = $(errId);
@@ -143,22 +166,31 @@ function validateForm() {
   const year     = Number(yearVal);
   const dur      = $('duration').value;
   const director = $('director').value.trim();
-  const genre    = $('genre').value;
   const status   = $('status').value;
   const notes    = $('notes').value.trim();
+  
+  // UPDATED: Check for custom genre if 'other' is selected
+  let genre = $('genre').value;
+  if (genre === 'other') {
+    genre = $('customGenre').value.trim();
+  }
+  
 
   if (!title) { setFieldState('movieTitle', 'err-title', true); isValid = false; } else { setFieldState('movieTitle', 'err-title', false); }
   if (!yearVal || year < 1888 || year > 2030) { setFieldState('releaseYear', 'err-year', true); isValid = false; } else { setFieldState('releaseYear', 'err-year', false); }
   if (dur !== '' && (isNaN(Number(dur)) || Number(dur) < 1 || Number(dur) > 600)) { setFieldState('duration', 'err-duration', true); isValid = false; } else { setFieldState('duration', 'err-duration', false); }
   if (director && /\d/.test(director)) { setFieldState('director', 'err-director', true); isValid = false; } else { setFieldState('director', 'err-director', false); }
+  
+  // Validation sa Genre na Inupdate
   if (!genre) { setFieldState('genre', 'err-genre', true); isValid = false; } else { setFieldState('genre', 'err-genre', false); }
+  
   if (!status) { setFieldState('status', 'err-status', true); isValid = false; } else { setFieldState('status', 'err-status', false); }
   if (notes.length > 300) { setFieldState('notes', 'err-notes', true); isValid = false; } else { setFieldState('notes', 'err-notes', false); }
 
   return isValid;
 }
 
-['movieTitle', 'releaseYear', 'duration', 'director', 'genre', 'status', 'notes'].forEach(id => {
+['movieTitle', 'releaseYear', 'duration', 'director', 'genre', 'customGenre', 'status', 'notes'].forEach(id => {
   const el = $(id);
   if (!el) return;
   el.addEventListener('input',  validateForm);
@@ -174,13 +206,19 @@ $('movie-form').addEventListener('submit', function (e) {
     return;
   }
 
+  // UPDATED: Kukunin ang Custom Genre pagka-submit
+  let finalGenre = $('genre').value;
+  if (finalGenre === 'other') {
+    finalGenre = $('customGenre').value.trim();
+  }
+
   const movie = {
     id:       Date.now(), 
     title:    $('movieTitle').value.trim(),
     year:     Number($('releaseYear').value),
     duration: $('duration').value ? Number($('duration').value) : null,
     director: $('director').value.trim() || '—',
-    genre:    $('genre').value,
+    genre:    finalGenre, // Ginagamit na yung nakuha natin sa taas
     status:   $('status').value,
     rating:   selectedRating,
     notes:    $('notes').value.trim(),
@@ -194,12 +232,18 @@ $('movie-form').addEventListener('submit', function (e) {
   showToast(`"${movie.title}" added to your watchlist!`);
 
   this.reset();
+  
+  // ADDED: Itatago ulit yung custom genre textfield pagkatapos mag-submit
+  if (customGenreGroup) {
+      customGenreGroup.style.display = 'none';
+  }
+
   selectedRating    = 0;
   $('rating').value = 0;
   refreshStars();
   setRatingLock(true); 
 
-  ['movieTitle', 'releaseYear', 'duration', 'director', 'genre', 'status', 'notes']
+  ['movieTitle', 'releaseYear', 'duration', 'director', 'genre', 'customGenre', 'status', 'notes']
     .forEach(id => {
       const el = $(id);
       if (el) el.classList.remove('is-error', 'is-valid');

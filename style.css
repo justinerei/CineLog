@@ -589,10 +589,12 @@ select.form-control option {
 /* ── DATA TABLE ───────────────────────────────────────────── */
 .table-scroll {
   overflow-x: auto;
+  
 }
 
 table {
   width: 100%;
+  table-layout: auto;
   border-collapse: collapse;
   font-size: 0.84rem;
 }
@@ -1149,4 +1151,13 @@ td .badge:hover {
   transform: scale(1.08);
   filter: brightness(1.2);
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+#customGenreGroup {
+  display: none; /* Nakatago by default */
+  margin-top: 10px;
+}
+
+#customGenreGroup.active {
+  display: block; /* Lalabas kapag 'Other' ang pinili */
 }
