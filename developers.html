@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developers — CineLog</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       NAVBAR
+       ══════════════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <a class="nav-brand" href="index.html">
+      <span class="logo-text">Cine<span>LOG</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="developers.html" class="active">Developers</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════
+       PAGE HERO
+       ══════════════════════════════════════════════════════ -->
+  <div class="page-hero">
+    <div class="section-eyebrow">👥 The Team</div>
+    <h1 class="section-title">Meet the <span class="accent">Developers</span></h1>
+    <p class="section-sub">
+      The three students behind CineLog — each contributing their unique
+      skills to bring this project to life.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       DEVELOPER CARDS
+       Replace "Member X Name" with real names before submitting
+       ══════════════════════════════════════════════════════ -->
+  <div class="content-grid">
+
+    <div class="dev-grid">
+
+      <!-- ── Member 1 ── -->
+      <div class="dev-card">
+        <!-- Avatar circle shows initials -->
+        <div class="dev-avatar">
+          <img src="img/jus.jpg" alt="Picture ni Member 1">
+        </div>
+        <!-- Replace with actual name -->
+        <div class="dev-name">Justine Janolino</div>
+        <div class="dev-role">Lead Developer & Project Manager</div>
+        <div class="dev-desc">
+          Responsible for the overall project architecture, JavaScript logic,
+          and DOM manipulation. Led development of the form validation system,
+          dynamic table rendering, and localStorage data management. Also
+          coordinated team tasks and timelines.
+        </div>
+        <!-- Skill tags -->
+        <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.35rem;">
+          <span class="tech-badge" style="font-size:0.72rem;">JavaScript</span>
+          <span class="tech-badge" style="font-size:0.72rem;">DOM Manipulation</span>
+          <span class="tech-badge" style="font-size:0.72rem;">Project Lead</span>
+        </div>
+      </div>
+
+      <!-- ── Member 2 ── -->
+      <div class="dev-card">
+        <div class="dev-avatar">
+          <img src="img/west.jpg" alt="Picture ni Member 1">
+        </div>
+        <!-- Replace with actual name -->
+        <div class="dev-name">Westly Rivera</div>
+        <div class="dev-role">UI/UX Designer & Front-end Developer</div>
+        <div class="dev-desc">
+          Designed the visual interface and overall aesthetic of CineLog.
+          Handled all CSS styling including the dark cinematic theme, responsive
+          layout, component design, animations, and the lime-green design system.
+          Ensured the app looks and feels premium on all screen sizes.
+        </div>
+        <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.35rem;">
+          <span class="tech-badge" style="font-size:0.72rem;">CSS3</span>
+          <span class="tech-badge" style="font-size:0.72rem;">UI Design</span>
+          <span class="tech-badge" style="font-size:0.72rem;">Responsive Layout</span>
+        </div>
+      </div>
+
+      <!-- ── Member 3 ── -->
+      <div class="dev-card">
+        <div class="dev-avatar">
+          <img src="img/josh.jpg" alt="Picture ni Member 1">
+        </div>
+        <!-- Replace with actual name -->
+        <div class="dev-name">Joshua Mamiit</div>
+        <div class="dev-role">Content Strategist & Documentation Lead</div>
+        <div class="dev-desc">
+          Crafted the HTML structure and page content across all three pages.
+          Led the creation of the Canva presentation and written documentation.
+          Managed Netlify deployment and conducted quality assurance testing
+          across different browsers and devices.
+        </div>
+        <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.35rem;">
+          <span class="tech-badge" style="font-size:0.72rem;">HTML5</span>
+          <span class="tech-badge" style="font-size:0.72rem;">Documentation</span>
+          <span class="tech-badge" style="font-size:0.72rem;">GitHub Deploy</span>
+        </div>
+      </div>
+
+    </div><!-- /dev-grid -->
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         CONTRIBUTION TABLE
+         ══════════════════════════════════════════════════ -->
+    <div class="info-card">
+      <h3>🤝 Team Contribution Summary</h3>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;font-size:0.84rem;border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--bg-elevated);border-bottom:1px solid var(--border);">
+              <th style="padding:0.7rem 1rem;text-align:left;font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);">Member</th>
+              <th style="padding:0.7rem 1rem;text-align:left;font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);">Role</th>
+              <th style="padding:0.7rem 1rem;text-align:left;font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);">Key Contributions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Member 1 row -->
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:0.8rem 1rem;color:var(--text-primary);font-weight:500;">Justine Janolino</td>
+              <td style="padding:0.8rem 1rem;">
+                <span class="badge badge-watched">Lead Dev</span>
+              </td>
+              <td style="padding:0.8rem 1rem;color:var(--text-secondary);">
+                JS logic, form validation, localStorage, CRUD operations
+              </td>
+            </tr>
+            <!-- Member 2 row -->
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:0.8rem 1rem;color:var(--text-primary);font-weight:500;">Westly Rivera</td>
+              <td style="padding:0.8rem 1rem;">
+                <span class="badge badge-watching">UI/UX</span>
+              </td>
+              <td style="padding:0.8rem 1rem;color:var(--text-secondary);">
+                CSS design system, dark theme, animations, responsive layout
+              </td>
+            </tr>
+            <!-- Member 3 row -->
+            <tr>
+              <td style="padding:0.8rem 1rem;color:var(--text-primary);font-weight:500;">Joshua Mamiit</td>
+              <td style="padding:0.8rem 1rem;">
+                <span class="badge badge-plan">Content</span>
+              </td>
+              <td style="padding:0.8rem 1rem;color:var(--text-secondary);">
+                HTML structure, Canva presentation, GitHub deployment, QA
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content-grid -->
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
+      <a href="index.html">← Back to Watchlist</a>
+    </p>
+  </footer>
+
+</body>
+</html>

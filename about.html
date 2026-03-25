@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — CineLog</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       NAVBAR
+       ══════════════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <a class="nav-brand" href="index.html">
+      <span class="logo-text">Cine<span>LOG</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="developers.html">Developers</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════
+       PAGE HERO
+       ══════════════════════════════════════════════════════ -->
+  <div class="page-hero">
+    <div class="section-eyebrow">📋 Project Details</div>
+    <h1 class="section-title">About <span class="accent">CineLog</span></h1>
+    <p class="section-sub">
+      A JavaScript-powered movie watchlist manager built for
+      ITEL 203 — Web Systems and Technologies.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       CONTENT
+       ══════════════════════════════════════════════════════ -->
+  <div class="content-grid">
+
+    <!-- Purpose -->
+    <div class="info-card">
+      <h3>🎯 Purpose of the System</h3>
+      <p>
+        CineLog is a dynamic, client-side web application that allows users
+        to manage their personal movie watchlist. Users can add movies with
+        detailed metadata, track their viewing status, rate films, and filter
+        or search through their collection — all without a backend server.
+        Data is stored using the browser's <strong>localStorage</strong> API,
+        making it persist across page reloads.
+      </p>
+      <p style="margin-top:0.7rem;">
+        The project demonstrates proficiency in DOM manipulation, event-driven
+        programming, form validation, and modern front-end design principles
+        as required by the course.
+      </p>
+    </div>
+
+    <!-- System Features -->
+    <div class="info-card">
+      <h3>⚙️ System Features</h3>
+      <ul class="feature-list">
+        <li>Add movies with title, year, genre, director, and duration</li>
+        <li>Interactive 5-star rating (locked unless status is Watched)</li>
+        <li>Watch status: Watched, Watching, Plan to Watch, Dropped</li>
+        <li>Real-time form validation with inline error messages</li>
+        <li>Dynamic table rendering via JavaScript DOM manipulation</li>
+        <li>Delete any record with one click from the table</li>
+        <li>Live search across title, genre, and director</li>
+        <li>Filter tabs by watch status category</li>
+        <li>Sortable table columns (click any header)</li>
+        <li>Live stats bar — total, watched, watching, plan, avg rating</li>
+        <li>Animated stat counters on add / delete</li>
+        <li>Toast notifications for user feedback</li>
+        <li>Data persists via localStorage (survives page refresh)</li>
+      </ul>
+    </div>
+
+    <!-- Technologies Used -->
+    <div class="info-card">
+      <h3>🛠 Technologies Used</h3>
+      <p>
+        Built entirely with vanilla web technologies — no frameworks,
+        no libraries, no build tools required.
+      </p>
+      <div style="margin-top:1rem;">
+        <span class="tech-badge">🌐 HTML5</span>
+        <span class="tech-badge">🎨 CSS3</span>
+        <span class="tech-badge">⚡ JavaScript ES6+</span>
+        <span class="tech-badge">💾 localStorage API</span>
+        <span class="tech-badge">📐 CSS Grid & Flexbox</span>
+        <span class="tech-badge">✍️ Google Fonts (Syne + Outfit)</span>
+        <span class="tech-badge">🚀 Netlify</span>
+        <span class="tech-badge">💻 VS Code</span>
+      </div>
+    </div>
+
+    <!-- Course Info -->
+    <div class="info-card">
+      <h3>📚 Course Information</h3>
+      <div class="meta-row">
+        <div class="meta-box">
+          <div class="meta-lbl">Course</div>
+          <div class="meta-val">ITEL 203 – Web Systems and Technologies</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Task</div>
+          <div class="meta-val">Group Performance Task #1</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Topic</div>
+          <div class="meta-val">Movie Watchlist Manager</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Level</div>
+          <div class="meta-val">2nd Year IT Students</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Deployment</div>
+          <div class="meta-val">Netlify</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Presentation</div>
+          <div class="meta-val">Canva</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Dev Tools</div>
+          <div class="meta-val">VS Code</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-lbl">Group Size</div>
+          <div class="meta-val">3 Students</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-grid -->
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
+      <a href="index.html">← Back to Watchlist</a>
+    </p>
+  </footer>
+
+</body>
+</html>

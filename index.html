@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineLog — Movie Watchlist Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="notesModal" class="modal-overlay">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3 id="modalMovieTitle">Movie Title</h3>
+    <div class="modal-body">
+      <p id="modalMovieNotes">Dito lalabas yung notes...</p>
+    </div>
+  </div>
+</div>
+
+  <!-- ══════════════════════════════════════════════════════
+       NAVBAR
+       Sticky top bar with brand logo and page navigation
+       ══════════════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <a class="nav-brand" href="index.html">
+      <span class="logo-text">Cine<span>LOG</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="developers.html">Developers</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════
+       HERO
+       Large display heading with green glow background
+       ══════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-eyebrow">🎞 Your Personal Cinema</div>
+    <h1 class="hero-title">
+      Track Every <span class="accent">Frame</span>
+    </h1>
+    <p class="hero-sub">
+      Log movies, rate them, and manage your ultimate watchlist
+      — all in one place.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       STATS BAR
+       Live counters — updated by script.js on every add/delete
+       ══════════════════════════════════════════════════════ -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <!-- id="stat-total" is targeted by updateStats() in script.js -->
+      <span class="stat-number" id="stat-total">0</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number" id="stat-watched">0</span>
+      <span class="stat-label">Watched</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number" id="stat-watching">0</span>
+      <span class="stat-label">Watching</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number" id="stat-plan">0</span>
+      <span class="stat-label">Plan to Watch</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number" id="stat-avg">—</span>
+      <span class="stat-label">Avg Rating</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       MAIN CONTENT — Two-column layout
+       Left: Add Movie form | Right: Watchlist table
+       ══════════════════════════════════════════════════════ -->
+  <main class="main-container">
+    <div class="two-col">
+
+      <!-- ────────────────────────────────────────────────
+           ADD MOVIE FORM (left column)
+           ──────────────────────────────────────────────── -->
+      <div class="card">
+
+        <!-- Card header -->
+        <div class="card-header">
+          <span class="card-header-icon">▸</span>
+          <div>
+            <h2>Add a Movie</h2>
+            <p>Fill in the details below</p>
+          </div>
+        </div>
+
+        <!-- Form body -->
+        <div class="card-body">
+          <form id="movie-form" novalidate>
+
+            <!-- Movie Title (required) -->
+            <div class="form-group">
+              <label class="form-label" for="movieTitle">
+                Movie Title <span class="req">*</span>
+              </label>
+              <input
+                class="form-control"
+                id="movieTitle"
+                type="text"
+                placeholder="e.g. Oppenheimer"
+                autocomplete="off" />
+              <div class="error-msg" id="err-title">⚠ Title is required.</div>
+            </div>
+
+            <!-- Year + Duration (side by side) -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="releaseYear">
+                  Year <span class="req">*</span>
+                </label>
+                <input
+                  class="form-control"
+                  id="releaseYear"
+                  type="number"
+                  placeholder="e.g. 2023"
+                  min="1888"
+                  max="2030" />
+                <div class="error-msg" id="err-year">⚠ Enter 1888–2030.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="duration">Duration (min)</label>
+                <input
+                  class="form-control"
+                  id="duration"
+                  type="number"
+                  placeholder="e.g. 120"
+                  min="1"
+                  max="600" />
+                <div class="error-msg" id="err-duration">⚠ Enter 1–600.</div>
+              </div>
+            </div>
+
+            <!-- Director (optional) -->
+            <div class="form-group">
+              <label class="form-label" for="director">Director</label>
+              <input
+                class="form-control"
+                id="director"
+                type="text"
+                placeholder="e.g. Christopher Nolan" />
+              <div class="error-msg" id="err-director">⚠ No numbers in name.</div>
+            </div>
+
+            <!-- Genre + Status (side by side) -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="genre">
+                  Genre <span class="req">*</span>
+                </label>
+                <select class="form-control" id="genre">
+                  <option value="">Select</option>
+                  <option>Action</option>
+                  <option>Adventure</option>
+                  <option>Animation</option>
+                  <option>Comedy</option>
+                  <option>Crime</option>
+                  <option>Drama</option>
+                  <option>Fantasy</option>
+                  <option>Horror</option>
+                  <option>Mystery</option>
+                  <option>Romance</option>
+                  <option>Sci-Fi</option>
+                  <option>Thriller</option>
+                  <option>Documentary</option>
+                  <option>Others</option>
+                </select>
+                <div class="error-msg" id="err-genre">⚠ Select a genre.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="status">
+                  Status <span class="req">*</span>
+                </label>
+                <!-- Changing this triggers the rating lock/unlock in script.js -->
+                <select class="form-control" id="status">
+                  <option value="">Select</option>
+                  <option value="watched">Watched</option>
+                  <option value="watching">Watching</option>
+                  <option value="plan">Plan to Watch</option>
+                  <option value="dropped">Dropped</option>
+                </select>
+                <div class="error-msg" id="err-status">⚠ Select a status.</div>
+              </div>
+            </div>
+
+            <!-- Star Rating
+                 Disabled unless status = "watched" (controlled by script.js)
+                 id="star-group" is toggled with .disabled class
+                 id="rating"     is a hidden input holding the numeric value -->
+            <div class="form-group">
+              <label class="form-label">Your Rating</label>
+              <div class="star-wrapper">
+                <div class="star-group disabled" id="star-group">
+                  <button type="button" class="star-btn" data-val="1" title="1 star">★</button>
+                  <button type="button" class="star-btn" data-val="2" title="2 stars">★</button>
+                  <button type="button" class="star-btn" data-val="3" title="3 stars">★</button>
+                  <button type="button" class="star-btn" data-val="4" title="4 stars">★</button>
+                  <button type="button" class="star-btn" data-val="5" title="5 stars">★</button>
+                </div>
+                <!-- Hidden input stores the numeric rating value for JS to read -->
+                <input type="hidden" id="rating" value="0" />
+                <!-- Lock message — shown when status is not "watched" -->
+                <span class="rating-lock-msg show" id="rating-lock-msg">
+                  Select "Watched" to rate this movie.
+                </span>
+              </div>
+            </div>
+
+            <!-- Notes / Review (optional) -->
+            <div class="form-group">
+              <label class="form-label" for="notes">Notes / Review</label>
+              <textarea
+                class="form-control"
+                id="notes"
+                rows="3"
+                placeholder="What did you think? (max 300 chars)"
+                style="resize:vertical; min-height:70px;"></textarea>
+              <div class="error-msg" id="err-notes">⚠ Max 300 characters.</div>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" class="btn-primary">
+              Add to Watchlist +
+            </button>
+
+          </form>
+        </div><!-- /card-body -->
+      </div><!-- /card -->
+
+
+      <!-- ────────────────────────────────────────────────
+           WATCHLIST TABLE (right column)
+           ──────────────────────────────────────────────── -->
+      <div class="table-panel">
+
+        <!-- Panel header with title + search -->
+        <div class="table-panel-header">
+          <div>
+            <h2>My Watchlist</h2>
+            <p>Check the details below</p>
+          </div>
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <!-- Triggers real-time search via script.js -->
+            <input
+              class="search-input"
+              id="searchInput"
+              type="text"
+              placeholder="Search movies…" />
+          </div>
+        </div>
+
+        <!-- Filter tabs — clicking changes currentFilter in script.js -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="watched">Watched</button>
+          <button class="filter-tab" data-filter="watching">Watching</button>
+          <button class="filter-tab" data-filter="plan">Plan to Watch</button>
+          <button class="filter-tab" data-filter="dropped">Dropped</button>
+        </div>
+
+        <!-- Scrollable table -->
+        <div class="table-scroll">
+          <table id="movie-table">
+            <thead>
+              <tr onclick="openNotesModal('${movie.title}', '${movie.notes}')">
+                <th>#</th>
+                <!-- data-col attributes enable column sorting in script.js -->
+                <th data-col="title">Title ↕</th>
+                <th data-col="genre">Genre</th>
+                <th data-col="year">Year ↕</th>
+                <th data-col="status">Status ↕</th>
+                <th data-col="rating">Rating ↕</th>
+                <!-- Delete column — no sorting needed -->
+                <th>Del</th>
+              </tr>
+            </thead>
+            <!-- Rows are injected here by renderTable() in script.js -->
+            <tbody id="movie-tbody"></tbody>
+          </table>
+
+          <!-- Shown when there are no rows to display -->
+          <div class="empty-state" id="empty-state">
+            <span class="empty-icon">🎬</span>
+            <p>No movies yet. Add your first one!</p>
+          </div>
+        </div><!-- /table-scroll -->
+
+      </div><!-- /table-panel -->
+
+    </div><!-- /two-col -->
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════ -->
+  <footer>
+    <p>
+      CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
+      HTML &middot; CSS &middot; JavaScript &bull;
+      <a href="developers.html">Meet the Team</a>
+    </p>
+  </footer>
+
+  <!-- Toast notification container (populated by script.js) -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Main application script -->
+  <script src="script.js"></script>
+
+</body>
+</html>
