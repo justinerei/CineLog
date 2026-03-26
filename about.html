@@ -4,18 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — CineLog</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind custom color tokens — mapped to CineLog's design system -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface:      '#141414',
+            elevated:     '#1c1c1c',
+            accent:       '#aaff2e',
+            'accent-dim': '#6db81a',
+            secondary:    '#9a9a9a',
+            muted:        '#555555',
+            stroke:       '#252525',
+            danger:       '#ff4444',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Global CSS variables, component styles, and the dot-grid background -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <!-- ══════════════════════════════════════════════════════
-       NAVBAR
+       NAVBAR — Sticky top bar with brand logo and nav links
        ══════════════════════════════════════════════════════ -->
-  <nav class="navbar">
-    <a class="nav-brand" href="index.html">
+  <nav class="sticky top-0 z-[100] bg-surface border-b border-stroke px-8 flex items-center justify-between h-[58px]">
+
+    <!-- Brand logo -->
+    <a class="nav-brand no-underline cursor-pointer flex items-center" href="index.html">
       <span class="logo-text">Cine<span>LOG</span></span>
     </a>
-    <ul class="nav-links">
+
+    <!-- Navigation links — hidden on mobile, shown on medium+ screens -->
+    <ul class="nav-links list-none hidden md:flex gap-0.5">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html" class="active">About</a></li>
       <li><a href="developers.html">Developers</a></li>
@@ -23,9 +51,9 @@
   </nav>
 
   <!-- ══════════════════════════════════════════════════════
-       PAGE HERO
+       PAGE HERO — Inner-page title and subtitle
        ══════════════════════════════════════════════════════ -->
-  <div class="page-hero">
+  <div class="flex flex-col items-center text-center pt-16 pb-10 px-8 max-w-4xl mx-auto">
     <div class="section-eyebrow">📋 Project Details</div>
     <h1 class="section-title">About <span class="accent">CineLog</span></h1>
     <p class="section-sub">
@@ -35,11 +63,11 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       CONTENT
+       CONTENT — Info cards with project details
        ══════════════════════════════════════════════════════ -->
-  <div class="content-grid">
+  <div class="max-w-[1140px] mx-auto px-8 pb-16">
 
-    <!-- Purpose -->
+    <!-- Purpose of the System card -->
     <div class="info-card">
       <h3>🎯 Purpose of the System</h3>
       <p>
@@ -50,14 +78,14 @@
         Data is stored using the browser's <strong>localStorage</strong> API,
         making it persist across page reloads.
       </p>
-      <p style="margin-top:0.7rem;">
+      <p class="mt-3">
         The project demonstrates proficiency in DOM manipulation, event-driven
         programming, form validation, and modern front-end design principles
         as required by the course.
       </p>
     </div>
 
-    <!-- System Features -->
+    <!-- System Features card -->
     <div class="info-card">
       <h3>⚙️ System Features</h3>
       <ul class="feature-list">
@@ -77,14 +105,15 @@
       </ul>
     </div>
 
-    <!-- Technologies Used -->
+    <!-- Technologies Used card -->
     <div class="info-card">
       <h3>🛠 Technologies Used</h3>
       <p>
         Built entirely with vanilla web technologies — no frameworks,
         no libraries, no build tools required.
       </p>
-      <div style="margin-top:1rem;">
+      <!-- Tech badge row — uses mt-4 Tailwind instead of inline style -->
+      <div class="mt-4">
         <span class="tech-badge">🌐 HTML5</span>
         <span class="tech-badge">🎨 CSS3</span>
         <span class="tech-badge">⚡ JavaScript ES6+</span>
@@ -96,7 +125,7 @@
       </div>
     </div>
 
-    <!-- Course Info -->
+    <!-- Course Information card -->
     <div class="info-card">
       <h3>📚 Course Information</h3>
       <div class="meta-row">
@@ -135,10 +164,12 @@
       </div>
     </div>
 
-  </div><!-- /content-grid -->
+  </div><!-- /content grid -->
 
-  <!-- Footer -->
-  <footer>
+  <!-- ══════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════ -->
+  <footer class="border-t border-stroke py-6 px-8 text-center text-muted text-xs">
     <p>
       CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
       <a href="index.html">← Back to Watchlist</a>
