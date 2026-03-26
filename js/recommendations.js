@@ -185,7 +185,7 @@ function renderExploreSection(genreProfile) {
   }
 
   grid.innerHTML = explorable
-    .map(m => buildRecCard(m, 0, '🌐 A genre you haven't explored much yet — worth a try!'))
+    .map(m => buildRecCard(m, 0, '🌐 A genre you haven\' explored much yet — worth a try!'))
     .join('');
 }
 
