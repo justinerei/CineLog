@@ -35,25 +35,22 @@
   <!-- ══════════════════════════════════════════════════════
        NAVBAR — Sticky top bar with brand logo and nav links
        ══════════════════════════════════════════════════════ -->
-  <nav class="sticky top-0 z-[100] bg-surface border-b border-stroke px-8 flex items-center justify-between h-[58px]">
+    <nav class="floating-nav z-[100] flex items-center justify-between">
+      <a class="nav-brand no-underline cursor-pointer flex items-center" href="index.html">
+        <span class="logo-text">Cine<span>LOG</span></span>
+      </a>
 
-    <!-- Brand logo -->
-    <a class="nav-brand no-underline cursor-pointer flex items-center" href="index.html">
-      <span class="logo-text">Cine<span>LOG</span></span>
-    </a>
-
-    <!-- Navigation links — hidden on mobile, shown on medium+ screens -->
-    <ul class="nav-links list-none hidden md:flex gap-0.5">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="developers.html" class="active">Developers</a></li>
-    </ul>
-  </nav>
+      <ul class="nav-links list-none hidden md:flex gap-0.5 m-0 p-0">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="developers.html">Developers</a></li>
+      </ul>
+    </nav>
 
   <!-- ══════════════════════════════════════════════════════
        PAGE HERO — Inner-page title and subtitle
        ══════════════════════════════════════════════════════ -->
-  <div class="flex flex-col items-center text-center pt-16 pb-10 px-8 max-w-4xl mx-auto">
+  <div class="flex flex-col items-center text-center pt-32 pb-10 px-8 max-w-4xl mx-auto">
     <div class="section-eyebrow">👥 The Team</div>
     <h1 class="section-title">Meet the <span class="accent">Developers</span></h1>
     <p class="section-sub">
