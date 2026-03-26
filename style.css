@@ -50,8 +50,12 @@ html { scroll-behavior: smooth; }
 /* Body base with Aceternity-style dot grid overlay */
 body {
   background-color: var(--bg-root);
+  
+  /* ONLY the dot grid for the whole body */
   background-image: radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px);
   background-size: 24px 24px;
+  background-attachment: fixed;
+  
   color: var(--text-primary);
   font-family: var(--font-body);
   font-weight: 400;
@@ -63,6 +67,26 @@ body {
 
 /* ── NAVBAR ───────────────────────────────────────────────── */
 /* Brand logo typography */
+.floating-nav {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1110px;
+  
+  /* Glassmorphism Effect */
+  background: rgba(20, 20, 20, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* Pill shape and border */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 0.5rem 1.5rem; 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
 .nav-brand .logo-text {
   font-family: var(--font-manrope);
   font-size: 1.35rem;
@@ -100,17 +124,27 @@ body {
 }
 
 /* ── HERO SECTION ─────────────────────────────────────────── */
-/* Radial lime glow behind the hero title */
+.hero {
+  position: relative;
+  /* Add smooth fade out at the bottom of the hero section */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+/* Radial lime glow ONLY behind the hero title */
 .hero::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 700px;
-  height: 400px;
-  background: radial-gradient(ellipse at center top, rgba(170, 255, 46, 0.12) 0%, transparent 65%);
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
+  z-index: -1;
+  
+  /* The two green corner glows, isolated to the hero section */
+  background-image: 
+    radial-gradient(at 10% 0%, rgba(170, 255, 46, 0.08) 0px, transparent 50%),
+    radial-gradient(at 90% 100%, rgba(170, 255, 46, 0.05) 0px, transparent 50%);
 }
 
 /* Small uppercase pill badge above the main heading */
@@ -159,6 +193,19 @@ body {
 }
 
 /* ── STATS BAR ────────────────────────────────────────────── */
+/* --- GLASS PANEL UTILITY (For Stats Bar & Cards) --- */
+.glass-panel {
+  background: rgba(20, 20, 20, 0.55); /* Slightly more transparent than the nav */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-radius: 16px; /* Smooth, rounded corners */
+  
+  /* Smooth transition if you want hover effects later */
+  transition: all 0.3s ease;
+}
+
 /* Large animated counter number */
 .stat-number {
   display: block;

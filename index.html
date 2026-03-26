@@ -35,15 +35,12 @@
   <!-- ══════════════════════════════════════════════════════
        NAVBAR — Sticky top bar with brand logo and nav links
        ══════════════════════════════════════════════════════ -->
-  <nav class="sticky top-0 z-[100] bg-surface border-b border-stroke px-8 flex items-center justify-between h-[58px]">
-
-    <!-- Brand logo -->
+  <nav class="floating-nav z-[100] flex items-center justify-between">
     <a class="nav-brand no-underline cursor-pointer flex items-center" href="index.html">
       <span class="logo-text">Cine<span>LOG</span></span>
     </a>
 
-    <!-- Navigation links — hidden on mobile, shown on medium+ screens -->
-    <ul class="nav-links list-none hidden md:flex gap-0.5">
+    <ul class="nav-links list-none hidden md:flex gap-0.5 m-0 p-0">
       <li><a href="index.html" class="active">Home</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="developers.html">Developers</a></li>
@@ -53,21 +50,27 @@
   <!-- ══════════════════════════════════════════════════════
        HERO — Page headline and tagline
        ══════════════════════════════════════════════════════ -->
-  <section class="hero relative py-20 pb-14 text-center overflow-hidden px-8">
-    <div class="hero-eyebrow">🎞 Your Personal Cinema</div>
-    <h1 class="hero-title">
-      Track Every <span class="accent">Frame</span>
-    </h1>
-    <p class="hero-sub">
-      Log movies, rate them, and manage your ultimate watchlist
-      — all in one place.
-    </p>
+  <section class="hero relative pt-40 pb-40 text-center overflow-hidden px-8">
+    
+    <div class="max-w-3xl mx-auto flex flex-col items-center">
+      <div class="hero-eyebrow mb-6">🎞 Your Personal Cinema</div>
+      
+      <h1 class="hero-title mb-6">
+        Track Every <span class="accent">Frame</span>
+      </h1>
+      
+      <p class="hero-sub text-lg md:text-xl">
+        Log movies, rate them, and manage your ultimate watchlist
+        — all in one place.
+      </p>
+    </div>
+    
   </section>
 
   <!-- ══════════════════════════════════════════════════════
        STATS BAR — Live counters for watchlist totals
        ══════════════════════════════════════════════════════ -->
-  <div class="flex justify-center gap-12 flex-wrap py-6 px-8 border-y border-stroke bg-surface mb-10">
+  <div class="glas-panel flex justify-center gap-12 flex-wrap py-6 px-8 border-y border-stroke bg-surface mb-10">
 
     <!-- Total movies counter -->
     <div class="text-center">
