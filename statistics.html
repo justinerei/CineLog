@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Statistics — CineLog</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: '#141414', elevated: '#1c1c1c',
+            accent: '#aaff2e', 'accent-dim': '#6db81a',
+            secondary: '#9a9a9a', muted: '#555555',
+            stroke: '#252525', danger: '#ff4444',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js for all data visualisations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       NAVBAR
+       ══════════════════════════════════════════════════════ -->
+  <nav class="floating-nav z-[100] flex items-center justify-between">
+    <a class="nav-brand no-underline cursor-pointer flex items-center" href="index.html">
+      <span class="logo-text">Cine<span>LOG</span></span>
+    </a>
+    <ul class="nav-links list-none hidden md:flex gap-0.5 m-0 p-0">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="statistics.html" class="active">Statistics</a></li>
+      <li><a href="recommendations.html">Picks</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="developers.html">Developers</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════
+       PAGE HERO
+       ══════════════════════════════════════════════════════ -->
+  <div class="flex flex-col items-center text-center pt-32 pb-10 px-8 max-w-4xl mx-auto">
+    <div class="section-eyebrow">📊 Insights</div>
+    <h1 class="section-title">Your <span class="accent">Statistics</span></h1>
+    <p class="section-sub">A visual breakdown of your entire movie history — genres, ratings, habits, and more.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       EMPTY STATE — Shown when the watchlist is completely empty
+       ══════════════════════════════════════════════════════ -->
+  <div id="stats-empty" class="empty-page-state" style="display:none;">
+    <div class="empty-page-icon">📊</div>
+    <div class="empty-page-title">No Data Yet</div>
+    <p class="empty-page-text">
+      Add some movies to your watchlist and come back here to see your
+      personalised statistics and charts.
+    </p>
+    <a href="index.html" class="btn-go-home">← Go Add Some Movies</a>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       STATS CONTENT — All cards and charts rendered by stats.js
+       ══════════════════════════════════════════════════════ -->
+  <div id="stats-content" class="max-w-[1140px] mx-auto px-8 pb-16">
+
+    <!-- ── SUMMARY STAT CARDS ─────────────────────────────── -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div class="summary-stat-card">
+        <div class="summary-stat-icon">🎬</div>
+        <div class="summary-stat-value" id="s-total">—</div>
+        <div class="summary-stat-label">Total Movies</div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="summary-stat-icon">✅</div>
+        <div class="summary-stat-value" id="s-completion">—</div>
+        <div class="summary-stat-label">Completion Rate</div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="summary-stat-icon">⭐</div>
+        <div class="summary-stat-value" id="s-avg-rating">—</div>
+        <div class="summary-stat-label">Avg Rating</div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="summary-stat-icon">⏱</div>
+        <div class="summary-stat-value" id="s-hours">—</div>
+        <div class="summary-stat-label">Hours Watched</div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="summary-stat-icon">🏷</div>
+        <div class="summary-stat-value" id="s-top-genre" style="font-size:1.2rem;letter-spacing:0;">—</div>
+        <div class="summary-stat-label">Top Genre</div>
+      </div>
+    </div>
+
+    <!-- ── ROW 1: Genre Doughnut + Rating Bar ─────────────── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
+      <!-- Genre distribution doughnut chart -->
+      <div class="chart-card">
+        <div class="chart-card-title">🎭 Genre Distribution</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="genreChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Rating distribution bar chart (1★ – 5★) -->
+      <div class="chart-card">
+        <div class="chart-card-title">⭐ Rating Distribution</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="ratingChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ROW 2: Watch Status Bar + Top Directors ────────── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
+      <!-- Watch status horizontal bar chart -->
+      <div class="chart-card">
+        <div class="chart-card-title">📋 Watch Status Breakdown</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top directors leaderboard (not a chart — rendered as HTML rows) -->
+      <div class="chart-card">
+        <div class="chart-card-title">🎬 Top Directors</div>
+        <div id="topDirectors" class="mt-2"></div>
+      </div>
+    </div>
+
+    <!-- ── ROW 3: Movies Per Release Year (full width) ────── -->
+    <div class="chart-card">
+      <div class="chart-card-title">📅 Movies in Your List by Release Year</div>
+      <div style="position:relative;height:220px;">
+        <canvas id="yearChart"></canvas>
+      </div>
+    </div>
+
+  </div><!-- /stats-content -->
+
+  <!-- ══════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════ -->
+  <footer class="border-t border-stroke py-6 px-8 text-center text-muted text-xs">
+    <p>CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
+      <a href="index.html">← Back to Watchlist</a></p>
+  </footer>
+
+  <script src="js/stats.js"></script>
+</body>
+</html>
