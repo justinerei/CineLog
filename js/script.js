@@ -1,8 +1,16 @@
 /* ============================================================
    CineLog — script.js
-   Main application logic for index.html (Watchlist page)
+   Main application logic for index.html
+   Includes OMDB API integration for auto-fill and poster fetch
    ITEL 203 Group Performance Task #1
    ============================================================ */
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB API CONFIGURATION
+   Free key from https://www.omdbapi.com/apikey.aspx
+   ══════════════════════════════════════════════════════════════ */
+const OMDB_API_KEY = '72f08bc0';
+const OMDB_BASE    = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}`;
 
 /* ── STATE ─────────────────────────────────────────────────── */
 let movies = JSON.parse(localStorage.getItem('cinelog_movies') || '[]');
@@ -13,7 +21,7 @@ let sortCol        = '';
 let sortDir        = 1;
 let selectedRating = 0;
 
-/* Holds a fully-built movie object while the duplicate modal is open */
+/* Holds a pending movie while the duplicate modal is open */
 let pendingMovie = null;
 
 /* ── PERSISTENCE ────────────────────────────────────────────── */
@@ -22,7 +30,271 @@ const saveMovies = () =>
 
 const $ = id => document.getElementById(id);
 
-/* ── TOAST NOTIFICATIONS ────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — GENRE MAPPING
+   OMDB returns genres like "Action, Adventure, Sci-Fi".
+   We take the first and map it to the closest dropdown value.
+   ══════════════════════════════════════════════════════════════ */
+const GENRE_MAP = {
+  'action':      'Action',
+  'adventure':   'Adventure',
+  'animation':   'Animation',
+  'comedy':      'Comedy',
+  'crime':       'Crime',
+  'drama':       'Drama',
+  'fantasy':     'Fantasy',
+  'horror':      'Horror',
+  'mystery':     'Mystery',
+  'romance':     'Romance',
+  'sci-fi':      'Sci-Fi',
+  'thriller':    'Thriller',
+  'documentary': 'Documentary',
+  'biography':   'Drama',
+  'history':     'Drama',
+  'sport':       'Drama',
+  'music':       'Drama',
+  'western':     'Action',
+  'war':         'Action',
+  'musical':     'Comedy',
+  'family':      'Animation',
+};
+
+/* Maps raw OMDB genre string → closest <select> value */
+function mapGenre(omdbGenre) {
+  if (!omdbGenre) return '';
+  const first = omdbGenre.split(',')[0].trim().toLowerCase();
+  return GENRE_MAP[first] || '';
+}
+
+/* "142 min" → 142 | "N/A" → null */
+function parseRuntime(runtime) {
+  if (!runtime || runtime === 'N/A') return null;
+  const m = runtime.match(/(\d+)/);
+  return m ? parseInt(m[1]) : null;
+}
+
+/* "2010" or "2010–2015" → "2010" */
+function parseYear(year) {
+  if (!year || year === 'N/A') return '';
+  return year.slice(0, 4);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — UI HELPERS
+   ══════════════════════════════════════════════════════════════ */
+
+/* Set the feedback message below the search bar */
+function setOmdbMsg(text, type = '') {
+  const el = $('omdbMsg');
+  el.textContent   = text;
+  el.className     = `omdb-msg ${type}`;
+  el.style.display = text ? 'block' : 'none';
+}
+
+/* Show/hide the spinner and toggle the Search label */
+function setOmdbLoading(isLoading) {
+  $('omdbBtnText').style.display = isLoading ? 'none'         : 'inline';
+  $('omdbSpinner').style.display = isLoading ? 'inline-block' : 'none';
+  $('omdbSearchBtn').disabled    = isLoading;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — SEARCH (returns list of matching titles)
+   ══════════════════════════════════════════════════════════════ */
+async function omdbSearch() {
+  const query = $('omdbSearchInput').value.trim();
+  if (!query) { setOmdbMsg('Please type a movie title first.', 'warn'); return; }
+
+  setOmdbLoading(true);
+  setOmdbMsg('');
+  $('omdbResults').style.display = 'none';
+
+  try {
+    const res  = await fetch(`${OMDB_BASE}&s=${encodeURIComponent(query)}&type=movie`);
+    const data = await res.json();
+
+    if (data.Response === 'False') {
+      setOmdbMsg(`No results found for "${query}". Try a different title.`, 'warn');
+      setOmdbLoading(false);
+      return;
+    }
+
+    renderOmdbResults(data.Search || []);
+    setOmdbMsg('');
+
+  } catch (err) {
+    setOmdbMsg('Search failed. Check your internet connection.', 'error');
+    console.error('OMDB search error:', err);
+  }
+
+  setOmdbLoading(false);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — RENDER RESULTS DROPDOWN
+   ══════════════════════════════════════════════════════════════ */
+function renderOmdbResults(results) {
+  const container = $('omdbResults');
+  if (!results.length) {
+    container.style.display = 'none';
+    setOmdbMsg('No movies matched your search.', 'warn');
+    return;
+  }
+
+  container.innerHTML = results.map(r => `
+    <div class="omdb-result-item" data-imdbid="${r.imdbID}" tabindex="0">
+      <!-- Poster thumbnail -->
+      ${r.Poster !== 'N/A'
+        ? `<img class="omdb-result-poster" src="${r.Poster}" alt="" onerror="this.style.display='none'" />`
+        : `<div class="omdb-result-no-poster">🎬</div>`}
+      <div class="omdb-result-info">
+        <div class="omdb-result-title">${r.Title}</div>
+        <div class="omdb-result-year">${r.Year}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  container.style.display = 'block';
+
+  /* Click or Enter on a result → fetch full details and fill the form */
+  container.querySelectorAll('.omdb-result-item').forEach(item => {
+    item.addEventListener('click', () => omdbFetchAndFill(item.dataset.imdbid));
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') omdbFetchAndFill(item.dataset.imdbid);
+    });
+  });
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — FETCH FULL DETAILS AND AUTO-FILL THE FORM
+   ══════════════════════════════════════════════════════════════ */
+async function omdbFetchAndFill(imdbId) {
+  $('omdbResults').style.display = 'none';
+  setOmdbMsg('Fetching details…', '');
+  setOmdbLoading(true);
+
+  try {
+    const res  = await fetch(`${OMDB_BASE}&i=${imdbId}&plot=short`);
+    const data = await res.json();
+
+    if (data.Response === 'False') {
+      setOmdbMsg('Could not load details for that movie.', 'error');
+      setOmdbLoading(false);
+      return;
+    }
+
+    /* ── Fill each form field ── */
+    $('movieTitle').value    = data.Title || '';
+    $('releaseYear').value   = parseYear(data.Year);
+    $('duration').value      = parseRuntime(data.Runtime) || '';
+
+    /* Director — take only the first name if multiple are listed */
+    $('director').value = (data.Director && data.Director !== 'N/A')
+      ? data.Director.split(',')[0].trim()
+      : '';
+
+    /* Genre — map to the closest dropdown option */
+    const mappedGenre = mapGenre(data.Genre);
+    if (mappedGenre) {
+      $('genre').value = mappedGenre;
+      const cgg = $('customGenreGroup');
+      if (cgg) cgg.style.display = 'none';
+    }
+
+    /* Store poster URL and plot in hidden fields for later use */
+    $('moviePosterUrl').value = (data.Poster && data.Poster !== 'N/A') ? data.Poster : '';
+    $('moviePlot').value      = (data.Plot   && data.Plot   !== 'N/A') ? data.Plot   : '';
+
+    /* Clear the search box */
+    $('omdbSearchInput').value = '';
+
+    /* Trigger live validation so green borders appear */
+    ['movieTitle','releaseYear','duration','director','genre'].forEach(id => {
+      const el = $(id);
+      if (el) el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    /* Show the poster preview thumbnail */
+    showPosterPreview(
+      data.Poster !== 'N/A' ? data.Poster : null,
+      data.Title
+    );
+
+    setOmdbMsg(`✓ Auto-filled: "${data.Title}" (${parseYear(data.Year)})`, 'success');
+
+  } catch (err) {
+    setOmdbMsg('Failed to load movie details. Try again.', 'error');
+    console.error('OMDB fetch error:', err);
+  }
+
+  setOmdbLoading(false);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — POSTER PREVIEW (shown above the form after auto-fill)
+   ══════════════════════════════════════════════════════════════ */
+function showPosterPreview(posterUrl, title) {
+  let preview = $('omdbPosterPreview');
+
+  /* Create the preview element on first use */
+  if (!preview) {
+    preview = document.createElement('div');
+    preview.id        = 'omdbPosterPreview';
+    preview.className = 'omdb-poster-preview';
+    const form = $('movie-form');
+    form.parentNode.insertBefore(preview, form);
+  }
+
+  if (posterUrl) {
+    preview.innerHTML = `
+      <img src="${posterUrl}" alt="${title} poster" class="omdb-preview-img" />
+      <div class="omdb-preview-label">
+        <span class="omdb-badge">OMDB</span> Poster retrieved
+      </div>`;
+  } else {
+    preview.innerHTML = `
+      <div class="omdb-preview-no-img">🎬</div>
+      <div class="omdb-preview-label" style="color:var(--text-muted);">No poster available</div>`;
+  }
+
+  preview.style.display = 'flex';
+}
+
+/* Hide the poster preview on form reset */
+function clearPosterPreview() {
+  const preview = $('omdbPosterPreview');
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OMDB — EVENT LISTENERS (search bar)
+   ══════════════════════════════════════════════════════════════ */
+$('omdbSearchBtn').addEventListener('click', omdbSearch);
+
+/* Enter key in the search input triggers search */
+$('omdbSearchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); omdbSearch(); }
+});
+
+/* Click outside the search block collapses the dropdown */
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.omdb-search-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    $('omdbResults').style.display = 'none';
+  }
+});
+
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ══════════════════════════════════════════════════════════════ */
 function showToast(message, type = 'success') {
   const container = $('toast-container');
   const el = document.createElement('div');
@@ -35,17 +307,18 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-/* ── STATS COUNTER ANIMATION ────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   STATS BAR
+   ══════════════════════════════════════════════════════════════ */
 function bumpStat(id) {
-  const el = $(id);
-  if (!el) return;
+  const el = $(id); if (!el) return;
   el.classList.remove('bump');
   void el.offsetWidth;
   el.classList.add('bump');
   setTimeout(() => el.classList.remove('bump'), 220);
 }
 
-/* ── STATS BAR ──────────────────────────────────────────────── */
 function updateStats() {
   const total    = movies.filter(m => m.status !== 'deleted').length;
   const watched  = movies.filter(m => m.status === 'watched').length;
@@ -64,7 +337,10 @@ function updateStats() {
   $('stat-avg').textContent = avg;
 }
 
-/* ── STAR RATING INPUT ──────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   STAR RATING INPUT
+   ══════════════════════════════════════════════════════════════ */
 const allStars  = document.querySelectorAll('#star-group .star-btn');
 const starGroup = $('star-group');
 const lockMsg   = $('rating-lock-msg');
@@ -75,22 +351,19 @@ function refreshStars() {
 
 function setRatingLock(isLocked) {
   if (isLocked) {
-    starGroup.classList.add('disabled');
-    lockMsg.classList.add('show');
+    starGroup.classList.add('disabled'); lockMsg.classList.add('show');
     selectedRating = 0; refreshStars(); $('rating').value = 0;
   } else {
-    starGroup.classList.remove('disabled');
-    lockMsg.classList.remove('show');
+    starGroup.classList.remove('disabled'); lockMsg.classList.remove('show');
   }
 }
 
 allStars.forEach(btn => {
   btn.addEventListener('mouseenter', () => {
     if (starGroup.classList.contains('disabled')) return;
-    const val = +btn.dataset.val;
-    allStars.forEach(s => s.classList.toggle('active', +s.dataset.val <= val));
+    allStars.forEach(s => s.classList.toggle('active', +s.dataset.val <= +btn.dataset.val));
   });
-  btn.addEventListener('mouseleave', () => refreshStars());
+  btn.addEventListener('mouseleave', refreshStars);
   btn.addEventListener('click', () => {
     if (starGroup.classList.contains('disabled')) return;
     selectedRating = +btn.dataset.val; $('rating').value = selectedRating; refreshStars();
@@ -100,7 +373,10 @@ allStars.forEach(btn => {
 $('status').addEventListener('change', function () { setRatingLock(this.value !== 'watched'); });
 setRatingLock(true);
 
-/* ── CUSTOM GENRE INPUT ─────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM GENRE INPUT
+   ══════════════════════════════════════════════════════════════ */
 const genreSelect      = document.getElementById('genre');
 const customGenreGroup = document.getElementById('customGenreGroup');
 const customGenreInput = document.getElementById('customGenre');
@@ -118,7 +394,25 @@ if (genreSelect && customGenreGroup) {
   });
 }
 
-/* ── FORM VALIDATION ────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   NOTES CHARACTER COUNTER
+   Live "48 / 300" counter below the textarea
+   ══════════════════════════════════════════════════════════════ */
+$('notes').addEventListener('input', function () {
+  const count   = this.value.length;
+  const counter = $('notesCount');
+  if (!counter) return;
+  counter.textContent = count;
+  counter.style.color = count > 280 ? 'var(--red)'
+                      : count > 250 ? '#ffc832'
+                      : 'var(--text-muted)';
+});
+
+
+/* ══════════════════════════════════════════════════════════════
+   FORM VALIDATION
+   ══════════════════════════════════════════════════════════════ */
 function setFieldState(inputId, errId, isError) {
   const input = $(inputId), errEl = $(errId);
   if (!input || !errEl) return;
@@ -128,7 +422,7 @@ function setFieldState(inputId, errId, isError) {
 }
 
 function validateForm() {
-  let isValid = true;
+  let isValid   = true;
   const title   = $('movieTitle').value.trim();
   const yearVal = $('releaseYear').value;
   const year    = Number(yearVal);
@@ -141,7 +435,7 @@ function validateForm() {
 
   if (!title)  { setFieldState('movieTitle',  'err-title',    true);  isValid = false; } else setFieldState('movieTitle',  'err-title',    false);
   if (!yearVal || year < 1888 || year > 2030) { setFieldState('releaseYear', 'err-year', true); isValid = false; } else setFieldState('releaseYear', 'err-year', false);
-  if (dur !== '' && (isNaN(Number(dur)) || Number(dur) < 1 || Number(dur) > 600)) { setFieldState('duration', 'err-duration', true); isValid = false; } else setFieldState('duration', 'err-duration', false);
+  if (dur !== '' && (isNaN(+dur) || +dur < 1 || +dur > 600)) { setFieldState('duration', 'err-duration', true); isValid = false; } else setFieldState('duration', 'err-duration', false);
   if (director && /\d/.test(director)) { setFieldState('director', 'err-director', true); isValid = false; } else setFieldState('director', 'err-director', false);
   if (!genre)  { setFieldState('genre',  'err-genre',  true);  isValid = false; } else setFieldState('genre',  'err-genre',  false);
   if (!status) { setFieldState('status', 'err-status', true);  isValid = false; } else setFieldState('status', 'err-status', false);
@@ -151,26 +445,44 @@ function validateForm() {
 
 ['movieTitle','releaseYear','duration','director','genre','customGenre','status','notes'].forEach(id => {
   const el = $(id); if (!el) return;
-  el.addEventListener('input', validateForm);
+  el.addEventListener('input',  validateForm);
   el.addEventListener('change', validateForm);
 });
 
-/* ── FORM RESET HELPER ──────────────────────────────────────── */
-/* Restore the form to its initial empty state after a successful add */
+
+/* ══════════════════════════════════════════════════════════════
+   FORM RESET
+   ══════════════════════════════════════════════════════════════ */
 function resetFormState() {
   $('movie-form').reset();
   if (customGenreGroup) customGenreGroup.style.display = 'none';
   selectedRating = 0; $('rating').value = 0;
   refreshStars(); setRatingLock(true);
+
+  /* Reset notes counter */
+  const counter = $('notesCount');
+  if (counter) { counter.textContent = '0'; counter.style.color = 'var(--text-muted)'; }
+
+  /* Clear OMDB hidden fields and UI */
+  $('moviePosterUrl').value = '';
+  $('moviePlot').value      = '';
+  clearPosterPreview();
+  setOmdbMsg('');
+  $('omdbSearchInput').value = '';
+
+  /* Strip all validation state */
   ['movieTitle','releaseYear','duration','director','genre','customGenre','status','notes'].forEach(id => {
     const el = $(id); if (el) el.classList.remove('is-error','is-valid');
   });
   document.querySelectorAll('.error-msg').forEach(el => el.classList.remove('show'));
 }
 
-/* ── FINALIZE ADD MOVIE ─────────────────────────────────────── */
-/* Commit the movie to storage and refresh all UI.
-   Called from the normal submit path and from "Add Anyway" in the duplicate modal. */
+
+/* ══════════════════════════════════════════════════════════════
+   FINALIZE ADD MOVIE
+   Commits the movie to storage and refreshes all UI.
+   Called from normal submit and from "Add Anyway".
+   ══════════════════════════════════════════════════════════════ */
 function finalizeAddMovie(movie) {
   movies.unshift(movie);
   saveMovies();
@@ -180,19 +492,18 @@ function finalizeAddMovie(movie) {
   resetFormState();
 }
 
-/* ── DUPLICATE DETECTION ────────────────────────────────────── */
-/* Returns the first non-deleted movie whose title matches (case-insensitive) */
+
+/* ══════════════════════════════════════════════════════════════
+   DUPLICATE DETECTION
+   ══════════════════════════════════════════════════════════════ */
 function findDuplicate(title) {
-  return movies.find(m =>
-    m.title.toLowerCase() === title.toLowerCase() && m.status !== 'deleted'
+  return movies.find(
+    m => m.title.toLowerCase() === title.toLowerCase() && m.status !== 'deleted'
   ) || null;
 }
 
-/* Populate the duplicate-warning modal with details of the conflicting movie */
 function showDuplicateModal(existing) {
   $('dupMovieTitle').textContent = `"${existing.title}"`;
-
-  /* Build a small summary card showing what the user already has */
   const [badgeClass, badgeLabel] = STATUS_MAP[existing.status] || ['badge-plan', existing.status];
   $('dupExistingInfo').innerHTML = `
     <div style="font-weight:600;color:var(--text-primary);margin-bottom:0.5rem;">
@@ -202,36 +513,31 @@ function showDuplicateModal(existing) {
       <span class="badge ${badgeClass}">${badgeLabel}</span>
       <span class="genre-pill">${existing.genre}</span>
     </div>
-    <div style="color:var(--text-secondary);font-size:0.8rem;line-height:1.6;">
+    <div style="color:var(--text-secondary);font-size:0.8rem;">
       ${existing.director !== '—' ? `<div>Director: ${existing.director}</div>` : ''}
       <div>${buildStarsHTML(existing.rating)}</div>
     </div>`;
   $('duplicateModal').classList.add('active');
 }
 
-/* "Add Anyway" — user acknowledges the duplicate and proceeds */
 $('btnDupAddAnyway').addEventListener('click', () => {
   if (pendingMovie) { finalizeAddMovie(pendingMovie); pendingMovie = null; }
   $('duplicateModal').classList.remove('active');
 });
-
-/* "Cancel" — discard the pending movie and dismiss the modal */
 $('btnDupCancel').addEventListener('click', () => {
-  pendingMovie = null;
-  $('duplicateModal').classList.remove('active');
+  pendingMovie = null; $('duplicateModal').classList.remove('active');
 });
-
-/* (×) close button on the duplicate modal */
 document.querySelector('.close-duplicate-modal').addEventListener('click', () => {
   pendingMovie = null; $('duplicateModal').classList.remove('active');
 });
-
-/* Backdrop click closes the duplicate modal */
 window.addEventListener('click', (e) => {
   if (e.target === $('duplicateModal')) { pendingMovie = null; $('duplicateModal').classList.remove('active'); }
 });
 
-/* ── FORM SUBMISSION ────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   FORM SUBMISSION
+   ══════════════════════════════════════════════════════════════ */
 $('movie-form').addEventListener('submit', function (e) {
   e.preventDefault();
   if (!validateForm()) { showToast('Please fix the errors before adding.', 'error'); return; }
@@ -239,22 +545,25 @@ $('movie-form').addEventListener('submit', function (e) {
   let finalGenre = $('genre').value;
   if (finalGenre.toLowerCase() === 'other') finalGenre = $('customGenre').value.trim();
 
+  /* Build the movie object — includes OMDB posterUrl and plot if available */
   const movie = {
-    id:       Date.now(),
-    title:    $('movieTitle').value.trim(),
-    year:     Number($('releaseYear').value),
-    duration: $('duration').value ? Number($('duration').value) : null,
-    director: $('director').value.trim() || '—',
-    genre:    finalGenre,
-    status:   $('status').value,
-    rating:   selectedRating,
-    notes:    $('notes').value.trim(),
+    id:        Date.now(),
+    title:     $('movieTitle').value.trim(),
+    year:      Number($('releaseYear').value),
+    duration:  $('duration').value ? Number($('duration').value) : null,
+    director:  $('director').value.trim() || '—',
+    genre:     finalGenre,
+    status:    $('status').value,
+    rating:    selectedRating,
+    notes:     $('notes').value.trim(),
+    posterUrl: $('moviePosterUrl').value || '',   /* OMDB poster URL */
+    plot:      $('moviePlot').value      || '',   /* OMDB short plot */
   };
 
-  /* ── Duplicate check: pause if a matching movie already exists ── */
+  /* Duplicate check */
   const duplicate = findDuplicate(movie.title);
   if (duplicate) {
-    pendingMovie = movie;   /* Save for "Add Anyway" */
+    pendingMovie = movie;
     showDuplicateModal(duplicate);
     return;
   }
@@ -262,7 +571,10 @@ $('movie-form').addEventListener('submit', function (e) {
   finalizeAddMovie(movie);
 });
 
-/* ── DELETE MOVIE ───────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   DELETE MOVIE
+   ══════════════════════════════════════════════════════════════ */
 function deleteMovie(id) {
   const target = movies.find(m => m.id === id);
   if (!target) return;
@@ -277,7 +589,10 @@ function deleteMovie(id) {
 }
 window.deleteMovie = deleteMovie;
 
-/* ── STAR HTML BUILDER ──────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   STAR HTML BUILDER (read-only display)
+   ══════════════════════════════════════════════════════════════ */
 function buildStarsHTML(n) {
   if (!n) return '<span style="color:var(--text-muted);font-size:0.72rem;">—</span>';
   let html = '<span class="stars-display">';
@@ -294,7 +609,10 @@ const STATUS_MAP = {
   deleted:  ['badge-deleted',  '🗑 Deleted'],
 };
 
-/* ── FILTER & SORT DATA ─────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   FILTER & SORT DATA
+   ══════════════════════════════════════════════════════════════ */
 function getDisplayData() {
   return movies
     .filter(m => {
@@ -309,24 +627,40 @@ function getDisplayData() {
       let av = a[sortCol], bv = b[sortCol];
       if (typeof av === 'string') av = av.toLowerCase();
       if (typeof bv === 'string') bv = bv.toLowerCase();
-      if (av < bv) return -1 * sortDir;
-      if (av > bv) return  1 * sortDir;
-      return 0;
+      return av < bv ? -1 * sortDir : av > bv ? 1 * sortDir : 0;
     });
 }
 
-/* ── TABLE RENDERER ─────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   TABLE RENDERER
+   Shows a small poster thumbnail in the title cell
+   when posterUrl is available on the movie object.
+   ══════════════════════════════════════════════════════════════ */
 function renderTable() {
   const tbody = $('movie-tbody'), emptyState = $('empty-state'), data = getDisplayData();
   if (!data.length) { tbody.innerHTML = ''; emptyState.style.display = ''; return; }
   emptyState.style.display = 'none';
+
   tbody.innerHTML = data.map((m, i) => {
     const [badgeClass, badgeLabel] = STATUS_MAP[m.status] || ['badge-plan', m.status];
+
+    /* Tiny poster thumbnail — only rendered when the URL exists */
+    const posterThumb = m.posterUrl
+      ? `<img src="${m.posterUrl}" alt="" class="table-poster-thumb" onerror="this.style.display='none'" />`
+      : '';
+
     return `
       <tr data-id="${m.id}" class="clickable-row">
         <td class="row-num">${i + 1}</td>
-        <td class="movie-title-cell">${m.title}
-          <small>${m.director !== '—' ? m.director : ''}${m.duration ? ` · ${m.duration}m` : ''}</small>
+        <td class="movie-title-cell">
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            ${posterThumb}
+            <div>
+              ${m.title}
+              <small>${m.director !== '—' ? m.director : ''}${m.duration ? ` · ${m.duration}m` : ''}</small>
+            </div>
+          </div>
         </td>
         <td><span class="genre-pill">${m.genre}</span></td>
         <td style="color:var(--text-secondary);">${m.year}</td>
@@ -337,7 +671,10 @@ function renderTable() {
   }).join('');
 }
 
-/* ── FILTER TABS ────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   FILTER TABS / SEARCH / SORT
+   ══════════════════════════════════════════════════════════════ */
 document.querySelectorAll('.filter-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     currentFilter = tab.dataset.filter;
@@ -347,10 +684,8 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
   });
 });
 
-/* ── LIVE SEARCH ────────────────────────────────────────────── */
 $('searchInput').addEventListener('input', function () { currentSearch = this.value; renderTable(); });
 
-/* ── COLUMN SORTING ─────────────────────────────────────────── */
 document.querySelectorAll('th[data-col]').forEach(th => {
   th.addEventListener('click', () => {
     if (sortCol === th.dataset.col) sortDir *= -1;
@@ -359,41 +694,71 @@ document.querySelectorAll('th[data-col]').forEach(th => {
   });
 });
 
-/* ── NOTES MODAL ────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   NOTES MODAL
+   Two-column layout: poster image (left) + details (right).
+   Poster and plot only shown when the movie has them stored.
+   ══════════════════════════════════════════════════════════════ */
 const modal         = document.getElementById('notesModal');
 const closeModalBtn = document.querySelector('.close-modal');
-const mTitle    = document.getElementById('modalMovieTitle');
-const mStatus   = document.getElementById('modalMovieStatus');
-const mYear     = document.getElementById('modalMovieYear');
-const mDuration = document.getElementById('modalMovieDuration');
-const mGenre    = document.getElementById('modalMovieGenre');
-const mDirector = document.getElementById('modalMovieDirector');
-const mRating   = document.getElementById('modalMovieRating');
-const mNotes    = document.getElementById('modalMovieNotes');
 
 function openNotesModal(movie) {
-  mTitle.textContent = movie.title;
+  /* Basic fields */
+  document.getElementById('modalMovieTitle').textContent = movie.title;
+
   const [badgeClass, badgeLabel] = STATUS_MAP[movie.status] || ['badge-plan', movie.status];
+  const mStatus = document.getElementById('modalMovieStatus');
   mStatus.className = `badge ${badgeClass}`; mStatus.textContent = badgeLabel;
-  mYear.textContent = movie.year;
-  mDuration.textContent = movie.duration ? `${movie.duration}m` : 'N/A';
-  mGenre.textContent = movie.genre;
-  mDirector.textContent = movie.director !== '—' ? movie.director : 'N/A';
+
+  document.getElementById('modalMovieYear').textContent     = movie.year;
+  document.getElementById('modalMovieDuration').textContent = movie.duration ? `${movie.duration}m` : 'N/A';
+  document.getElementById('modalMovieGenre').textContent    = movie.genre;
+  document.getElementById('modalMovieDirector').textContent = movie.director !== '—' ? movie.director : 'N/A';
+
+  const mRating = document.getElementById('modalMovieRating');
   mRating.innerHTML = movie.status === 'watched'
     ? buildStarsHTML(movie.rating)
     : '<span style="color:#666;font-style:italic;">Not yet watched</span>';
-  if (movie.notes && movie.notes.trim() !== '') {
+
+  /* Poster column */
+  const posterCol = document.getElementById('modalPosterCol');
+  const posterImg = document.getElementById('modalPosterImg');
+  if (movie.posterUrl) {
+    posterImg.src           = movie.posterUrl;
+    posterImg.alt           = movie.title + ' poster';
+    posterCol.style.display = 'block';
+  } else {
+    posterCol.style.display = 'none';
+  }
+
+  /* OMDB plot */
+  const plotWrap = document.getElementById('modalPlotWrap');
+  if (movie.plot) {
+    document.getElementById('modalMoviePlot').textContent = movie.plot;
+    plotWrap.style.display = 'block';
+  } else {
+    plotWrap.style.display = 'none';
+  }
+
+  /* Notes */
+  const mNotes = document.getElementById('modalMovieNotes');
+  if (movie.notes && movie.notes.trim()) {
     mNotes.textContent = movie.notes; mNotes.style.fontStyle = 'normal'; mNotes.style.color = '#ccc';
   } else {
     mNotes.textContent = 'No notes saved for this movie.'; mNotes.style.fontStyle = 'italic'; mNotes.style.color = '#666';
   }
+
   modal.classList.add('active');
 }
 
 closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
 window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
 
-/* ── TABLE ROW CLICK DELEGATION ─────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   TABLE ROW CLICK DELEGATION
+   ══════════════════════════════════════════════════════════════ */
 $('movie-tbody').addEventListener('click', (e) => {
   if (e.target.closest('.btn-delete')) return;
   const row = e.target.closest('tr'); if (!row) return;
@@ -402,7 +767,10 @@ $('movie-tbody').addEventListener('click', (e) => {
   openNotesModal(movie);
 });
 
-/* ── UPDATE STATUS MODAL ────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   UPDATE STATUS MODAL
+   ══════════════════════════════════════════════════════════════ */
 const updateModal    = document.getElementById('updateModal');
 const closeUpdateBtn = document.querySelector('.close-update-modal');
 const updTitle       = document.getElementById('updateMovieTitle');
@@ -418,7 +786,6 @@ let currentUpdRating = 0;
 function refreshUpdStars() {
   updStars.forEach(s => s.classList.toggle('active', +s.dataset.val <= currentUpdRating));
 }
-
 function setUpdRatingLock(isLocked) {
   if (isLocked) {
     updStarGroup.classList.add('disabled'); updLockMsg.classList.add('show');
@@ -427,7 +794,6 @@ function setUpdRatingLock(isLocked) {
     updStarGroup.classList.remove('disabled'); updLockMsg.classList.remove('show');
   }
 }
-
 updStars.forEach(btn => {
   btn.addEventListener('mouseenter', () => {
     if (updStarGroup.classList.contains('disabled')) return;
@@ -439,17 +805,15 @@ updStars.forEach(btn => {
     currentUpdRating = +btn.dataset.val; updRatingInput.value = currentUpdRating; refreshUpdStars();
   });
 });
-
 updStatus.addEventListener('change', function () { setUpdRatingLock(this.value !== 'watched'); });
 
 function openUpdateModal(movie) {
   updTitle.textContent = movie.title;
-  updId.value = movie.id;
-  updStatus.value = movie.status;
+  updId.value = movie.id; updStatus.value = movie.status;
   if (movie.status === 'watched') {
     setUpdRatingLock(false);
     currentUpdRating = movie.rating || 0; updRatingInput.value = currentUpdRating; refreshUpdStars();
-  } else { setUpdRatingLock(true); }
+  } else setUpdRatingLock(true);
   updateModal.classList.add('active');
 }
 
@@ -458,16 +822,19 @@ window.addEventListener('click', (e) => { if (e.target === updateModal) updateMo
 
 btnSaveUpdate.addEventListener('click', () => {
   const movieId = Number(updId.value), newStatus = updStatus.value, newRating = Number(updRatingInput.value);
-  const movieIndex = movies.findIndex(m => m.id === movieId);
-  if (movieIndex > -1) {
-    movies[movieIndex].status = newStatus;
-    movies[movieIndex].rating = newStatus === 'watched' ? newRating : 0;
+  const idx = movies.findIndex(m => m.id === movieId);
+  if (idx > -1) {
+    movies[idx].status = newStatus;
+    movies[idx].rating = newStatus === 'watched' ? newRating : 0;
     saveMovies(); renderTable(); updateStats();
-    showToast(`"${movies[movieIndex].title}" status updated!`);
+    showToast(`"${movies[idx].title}" status updated!`);
   }
   updateModal.classList.remove('active');
 });
 
-/* ── INITIALISE ─────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   INITIALISE
+   ══════════════════════════════════════════════════════════════ */
 renderTable();
 updateStats();

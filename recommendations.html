@@ -20,7 +20,6 @@
     }
   </script>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 </head>
 <body>
 
@@ -49,11 +48,12 @@
     <p class="section-sub">
       Based on what you've watched and rated, here's what you should watch next
       from your own Plan to Watch list.
+      Posters and details are fetched live from <span class="omdb-badge" style="vertical-align:middle;">OMDB</span>.
     </p>
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       COMPLETELY EMPTY STATE — No movies at all
+       EMPTY STATE — No movies at all
        ══════════════════════════════════════════════════════ -->
   <div id="rec-empty-all" class="empty-page-state" style="display:none;">
     <div class="empty-page-icon">🎬</div>
@@ -66,7 +66,7 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       NO PLAN-TO-WATCH STATE — Has watched movies but no plan list
+       EMPTY STATE — Has watched movies but no Plan to Watch
        ══════════════════════════════════════════════════════ -->
   <div id="rec-empty-plan" class="empty-page-state" style="display:none;">
     <div class="empty-page-icon">📋</div>
@@ -83,8 +83,7 @@
        ══════════════════════════════════════════════════════ -->
   <div id="rec-content" class="max-w-[1140px] mx-auto px-8 pb-16" style="display:none;">
 
-    <!-- ── TASTE PROFILE ──────────────────────────────────── -->
-    <!-- Shows the user's inferred genre preferences and favourite director -->
+    <!-- ── TASTE PROFILE CARD ─────────────────────────────── -->
     <div class="chart-card mb-6">
       <div class="chart-card-title">🧠 Your Taste Profile</div>
       <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;" id="taste-intro-text">
@@ -94,45 +93,36 @@
       <div id="taste-director" style="font-size:0.82rem;color:var(--text-secondary);"></div>
     </div>
 
-    <!-- ── BEST PICKS FOR YOU ─────────────────────────────── -->
-    <!-- Plan-to-Watch movies that best match the user's genre preferences -->
+    <!-- ── BEST PICKS ─────────────────────────────────────── -->
     <div class="mb-2">
-      <div class="flex items-center gap-3 mb-1">
-        <h2 style="font-family:var(--font-bebas);font-size:1.6rem;letter-spacing:2px;color:var(--text-primary);">
-          🎯 Best Picks For You
-        </h2>
-      </div>
+      <h2 style="font-family:var(--font-bebas);font-size:1.6rem;letter-spacing:2px;color:var(--text-primary);">
+        🎯 Best Picks For You
+      </h2>
       <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem;">
         Top matches from your Plan to Watch list, ranked by how well they fit your taste.
+        Posters loaded from OMDB.
       </p>
     </div>
-
-    <!-- Card grid injected by recommendations.js -->
-    <div id="best-picks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+    <div id="best-picks-grid" class="rec-grid mb-8"></div>
     <div id="best-picks-empty" class="rec-section-empty" style="display:none;">
       No Plan to Watch movies match your preferred genres yet.
     </div>
 
     <!-- ── EXPLORE NEW GENRES ─────────────────────────────── -->
-    <!-- Plan-to-Watch movies in genres the user hasn't explored much -->
     <div class="mb-2">
-      <div class="flex items-center gap-3 mb-1">
-        <h2 style="font-family:var(--font-bebas);font-size:1.6rem;letter-spacing:2px;color:var(--text-primary);">
-          🌐 Explore New Genres
-        </h2>
-      </div>
+      <h2 style="font-family:var(--font-bebas);font-size:1.6rem;letter-spacing:2px;color:var(--text-primary);">
+        🌐 Explore New Genres
+      </h2>
       <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem;">
         Movies in genres you haven't watched much yet — time to branch out.
       </p>
     </div>
-
-    <div id="explore-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+    <div id="explore-grid" class="rec-grid mb-8"></div>
     <div id="explore-empty" class="rec-section-empty" style="display:none;">
       You've already explored all available genres in your Plan to Watch list!
     </div>
 
-    <!-- ── ALL PLAN-TO-WATCH FALLBACK ─────────────────────── -->
-    <!-- Shown when there's no watch history to personalise against -->
+    <!-- ── FALLBACK (no watch history) ───────────────────── -->
     <div id="fallback-section" style="display:none;">
       <div class="mb-2">
         <h2 style="font-family:var(--font-bebas);font-size:1.6rem;letter-spacing:2px;color:var(--text-primary);">
@@ -142,14 +132,12 @@
           Start watching and rating movies to get personalised picks. Here's your full queue:
         </p>
       </div>
-      <div id="fallback-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+      <div id="fallback-grid" class="rec-grid mb-8"></div>
     </div>
 
   </div><!-- /rec-content -->
 
-  <!-- ══════════════════════════════════════════════════════
-       FOOTER
-       ══════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
   <footer class="border-t border-stroke py-6 px-8 text-center text-muted text-xs">
     <p>CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
       <a href="index.html">← Back to Watchlist</a></p>

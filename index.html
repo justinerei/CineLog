@@ -20,7 +20,6 @@
     }
   </script>
   <link rel="stylesheet" href="style.css" />
-  
 </head>
 <body>
 
@@ -47,7 +46,7 @@
     <div class="max-w-3xl mx-auto flex flex-col items-center">
       <div class="hero-eyebrow mb-10">🎞 Your Personal Cinema</div>
       <h1 class="hero-title mb-6">Track Every <span class="accent">Frame</span></h1>
-      <p class="hero-sub text-lg md:text-l">
+      <p class="hero-sub text-lg md:text-xl">
         Log movies, rate them, and manage your ultimate watchlist — all in one place.
       </p>
     </div>
@@ -68,42 +67,86 @@
        MAIN CONTENT — Two-column layout: form | table
        ══════════════════════════════════════════════════════ -->
   <main class="max-w-[1140px] mx-auto px-8 pb-16">
-    <div class="grid grid-cols-1 md:grid-cols-[360px_1fr] gap-7 items-start">
+    <div class="grid grid-cols-1 md:grid-cols-[380px_1fr] gap-7 items-start">
 
       <!-- ── ADD MOVIE CARD ──────────────────────────────── -->
       <div class="card">
         <div class="card-header">
           <span class="card-header-icon">▸</span>
-          <div><h2>Add a Movie</h2><p>Fill in the details below</p></div>
+          <div><h2>Add a Movie</h2><p>Search or fill in manually</p></div>
         </div>
         <div class="p-6">
+
+          <!-- ════════════════════════════════════════════
+               OMDB SEARCH BAR
+               Type a title and press Search (or Enter)
+               to auto-fill all form fields from OMDB.
+               ════════════════════════════════════════════ -->
+          <div class="omdb-search-wrap">
+            <div class="omdb-search-label">
+              <span class="omdb-badge">OMDB</span>
+              Auto-fill from movie database
+            </div>
+
+            <!-- Search input + button -->
+            <div class="omdb-input-row">
+              <input id="omdbSearchInput" class="omdb-input" type="text"
+                placeholder="Search a movie title…" autocomplete="off" />
+              <button id="omdbSearchBtn" class="omdb-btn" type="button">
+                <span id="omdbBtnText">Search</span>
+                <span id="omdbSpinner" class="omdb-spinner" style="display:none;"></span>
+              </button>
+            </div>
+
+            <!-- Results dropdown — populated by JS -->
+            <div id="omdbResults" class="omdb-results" style="display:none;"></div>
+
+            <!-- Feedback message (success / warn / error) -->
+            <div id="omdbMsg" class="omdb-msg" style="display:none;"></div>
+          </div>
+
+          <!-- Divider between OMDB block and the manual form -->
+          <div class="omdb-divider"><span>or fill in manually</span></div>
+
+          <!-- ════════════════════════════════════════════
+               MAIN ADD-MOVIE FORM
+               Fields auto-filled by OMDB but editable.
+               ════════════════════════════════════════════ -->
           <form id="movie-form" novalidate>
 
+            <!-- Movie title -->
             <div class="form-group">
               <label class="form-label" for="movieTitle">Movie Title <span class="req">*</span></label>
-              <input class="form-control" id="movieTitle" type="text" placeholder="e.g. Oppenheimer" autocomplete="off" />
+              <input class="form-control" id="movieTitle" type="text"
+                placeholder="e.g. Oppenheimer" autocomplete="off" />
               <div class="error-msg" id="err-title">⚠ Title is required.</div>
             </div>
 
+            <!-- Year + Duration -->
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="releaseYear">Year <span class="req">*</span></label>
-                <input class="form-control" id="releaseYear" type="number" placeholder="e.g. 2023" min="1888" max="2030" />
+                <input class="form-control" id="releaseYear" type="number"
+                  placeholder="e.g. 2023" min="1888" max="2030" />
                 <div class="error-msg" id="err-year">⚠ Enter 1888–2030.</div>
               </div>
               <div class="form-group">
                 <label class="form-label" for="duration">Duration (min)</label>
-                <input class="form-control" id="duration" type="number" placeholder="e.g. 120" min="1" max="600" />
+                <input class="form-control" id="duration" type="number"
+                  placeholder="e.g. 120" min="1" max="600" />
                 <div class="error-msg" id="err-duration">⚠ Enter 1–600.</div>
               </div>
             </div>
 
+            <!-- Director -->
             <div class="form-group">
               <label class="form-label" for="director">Director</label>
-              <input class="form-control" id="director" type="text" placeholder="e.g. Christopher Nolan" />
+              <input class="form-control" id="director" type="text"
+                placeholder="e.g. Christopher Nolan" />
               <div class="error-msg" id="err-director">⚠ No numbers in name.</div>
             </div>
 
+            <!-- Genre + Status -->
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="genre">Genre <span class="req">*</span></label>
@@ -124,8 +167,10 @@
                   <option value="Documentary">Documentary</option>
                   <option value="Other">Other</option>
                 </select>
+                <!-- Revealed when "Other" is selected -->
                 <div id="customGenreGroup" class="mt-2.5">
-                  <input type="text" class="form-control" id="customGenre" placeholder="Type custom genre here..." />
+                  <input type="text" class="form-control" id="customGenre"
+                    placeholder="Type custom genre here..." />
                 </div>
                 <div class="error-msg" id="err-genre">⚠ Select a genre.</div>
               </div>
@@ -142,6 +187,7 @@
               </div>
             </div>
 
+            <!-- Star rating — locked until status is "Watched" -->
             <div class="form-group">
               <label class="form-label">Your Rating</label>
               <div class="star-wrapper">
@@ -153,26 +199,37 @@
                   <button type="button" class="star-btn" data-val="5" title="5 stars">★</button>
                 </div>
                 <input type="hidden" id="rating" value="0" />
-                <span class="rating-lock-msg show" id="rating-lock-msg">Select "Watched" to rate this movie.</span>
+                <span class="rating-lock-msg show" id="rating-lock-msg">
+                  Select "Watched" to rate this movie.
+                </span>
               </div>
             </div>
 
+            <!-- Notes / review -->
             <div class="form-group">
               <label class="form-label" for="notes">Notes / Review</label>
               <textarea class="form-control" id="notes" rows="3"
-                placeholder="What did you think? (max 300 chars)" style="resize:vertical;min-height:70px;"></textarea>
+                placeholder="What did you think? (max 300 chars)"
+                style="resize:vertical;min-height:70px;"></textarea>
+              <!-- Live character counter -->
+              <div class="notes-counter"><span id="notesCount">0</span> / 300</div>
               <div class="error-msg" id="err-notes">⚠ Max 300 characters.</div>
             </div>
 
+            <!-- Hidden fields — store OMDB data not visible in the form -->
+            <input type="hidden" id="moviePosterUrl" value="" />
+            <input type="hidden" id="moviePlot"      value="" />
+
             <button type="submit" class="btn-primary">Add to Watchlist +</button>
           </form>
+
         </div>
       </div><!-- /card -->
 
       <!-- ── WATCHLIST TABLE PANEL ──────────────────────── -->
       <div class="table-panel">
         <div class="table-panel-header">
-          <div><h2>My Watchlist</h2><p>Check the details below</p></div>
+          <div><h2>My Watchlist</h2><p>Click any row to view details</p></div>
           <div class="search-wrap">
             <span class="search-icon">🔍</span>
             <input class="search-input" id="searchInput" type="text" placeholder="Search movies…" />
@@ -207,9 +264,7 @@
     </div>
   </main>
 
-  <!-- ══════════════════════════════════════════════════════
-       FOOTER
-       ══════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
   <footer class="border-t border-stroke py-6 px-8 text-center text-muted text-xs">
     <p>CineLog &mdash; ITEL 203 Group Performance Task #1 &bull;
       HTML &middot; CSS &middot; JavaScript &bull;
@@ -217,34 +272,53 @@
   </footer>
 
   <!-- ══════════════════════════════════════════════════════
-       NOTES MODAL — Opens when a table row is clicked
+       NOTES MODAL
+       Two-column layout when a poster is available.
        ══════════════════════════════════════════════════════ -->
   <div id="notesModal" class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content modal-content--wide">
       <span class="close-modal">&times;</span>
-      <div class="modal-header">
-        <h3 id="modalMovieTitle">Movie Title</h3>
-        <span id="modalMovieStatus" class="badge">Status</span>
-      </div>
-      <div class="modal-meta">
-        <span id="modalMovieYear">2023</span> &bull;
-        <span id="modalMovieDuration">120m</span> &bull;
-        <span class="genre-pill" id="modalMovieGenre">Action</span>
-      </div>
-      <div class="modal-extra-info">
-        <div><strong>Director:</strong> <span id="modalMovieDirector">N/A</span></div>
-        <div class="mt-1"><strong>Rating:</strong> <span id="modalMovieRating">N/A</span></div>
-      </div>
-      <div class="h-px bg-stroke my-5"></div>
-      <div class="modal-body">
-        <strong class="text-white text-[0.9rem]">My Notes / Review:</strong>
-        <p id="modalMovieNotes" class="mt-1.5">Notes will appear here...</p>
+
+      <div class="modal-poster-layout">
+
+        <!-- Left column: poster (hidden when no poster URL) -->
+        <div class="modal-poster-col" id="modalPosterCol" style="display:none;">
+          <img id="modalPosterImg" src="" alt="Movie Poster" class="modal-poster-img" />
+        </div>
+
+        <!-- Right column: all movie details -->
+        <div class="modal-details-col">
+          <div class="modal-header">
+            <h3 id="modalMovieTitle">Movie Title</h3>
+            <span id="modalMovieStatus" class="badge">Status</span>
+          </div>
+          <div class="modal-meta">
+            <span id="modalMovieYear">2023</span> &bull;
+            <span id="modalMovieDuration">120m</span> &bull;
+            <span class="genre-pill" id="modalMovieGenre">Action</span>
+          </div>
+          <div class="modal-extra-info">
+            <div><strong>Director:</strong> <span id="modalMovieDirector">N/A</span></div>
+            <div class="mt-1"><strong>Rating:</strong> <span id="modalMovieRating">N/A</span></div>
+            <!-- OMDB plot — shown only when available -->
+            <div id="modalPlotWrap" class="mt-2" style="display:none;">
+              <strong>Plot:</strong>
+              <span id="modalMoviePlot" class="modal-plot-text"></span>
+            </div>
+          </div>
+          <div class="h-px bg-stroke my-4"></div>
+          <div>
+            <strong class="text-white text-[0.9rem]">My Notes / Review:</strong>
+            <p id="modalMovieNotes" class="mt-1.5">Notes will appear here...</p>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       UPDATE STATUS MODAL — Opens when a status badge is clicked
+       UPDATE STATUS MODAL
        ══════════════════════════════════════════════════════ -->
   <div id="updateModal" class="modal-overlay">
     <div class="modal-content modal-content--sm">
@@ -280,30 +354,22 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       DUPLICATE WARNING MODAL — Shown when a duplicate title is detected
+       DUPLICATE WARNING MODAL
        ══════════════════════════════════════════════════════ -->
   <div id="duplicateModal" class="modal-overlay">
     <div class="modal-content modal-content--sm">
       <span class="close-duplicate-modal close-modal">&times;</span>
-
-      <!-- Warning header with icon -->
       <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
         <span style="font-size:1.6rem;line-height:1;">⚠️</span>
         <h3 style="margin:0;color:var(--green);font-family:var(--font-display);">Duplicate Detected</h3>
       </div>
-
-      <!-- Message naming the conflicting title -->
       <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:1rem;line-height:1.6;">
         <span id="dupMovieTitle" style="color:var(--text-primary);font-weight:600;"></span>
         is already in your watchlist. Here's what you have:
       </p>
-
-      <!-- Summary of the existing movie -->
       <div id="dupExistingInfo"
         style="background:var(--bg-elevated);border:1px solid var(--border);
                border-radius:var(--radius-md);padding:1rem;margin-bottom:1.25rem;"></div>
-
-      <!-- Action buttons -->
       <div style="display:flex;gap:0.75rem;">
         <button id="btnDupCancel" class="dup-btn-cancel">Cancel</button>
         <button id="btnDupAddAnyway" class="btn-primary" style="flex:1;margin-top:0;">Add Anyway</button>
